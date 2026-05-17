@@ -73,12 +73,15 @@ class TemplateRemove extends Command
             return self::FAILURE;
         }
 
-        foreach ($layers as $l) {
-            $this->removeLayer($l, $scope);
-        }
-
         if (!empty($scope) && empty($layer)) {
+            // Scope-only: remove from both layers + shared files
+            $this->removeLayer('website', $scope);
+            $this->removeLayer('api', $scope);
             $this->removeScopeShared($scope);
+        } else {
+            foreach ($layers as $l) {
+                $this->removeLayer($l, $scope);
+            }
         }
 
         $this->newLine();
