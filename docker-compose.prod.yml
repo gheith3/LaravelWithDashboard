@@ -1,0 +1,168 @@
+# Laravel Docker Template - Production Environment
+# For use with Docker Portainer
+# Copy .env.prod.example to set your environment variables in Portainer
+
+services:
+
+  # Laravel Application
+  website:
+    image: ghcr.io/gheith3/backend:latest
+    container_name: ${PROJECT_NAME:-laravel}-website
+    environment:
+      # ============================================
+      # Application (REQUIRED)
+      # ============================================
+      - APP_NAME=${APP_NAME:-Laravel}
+      - APP_ENV=${APP_ENV:-production}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_URL=${APP_URL:?APP_URL is required}
+      - ASSET_URL=${APP_URL}
+      - APP_KEY=${APP_KEY:?APP_KEY is required}
+      - APP_LOCALE=${APP_LOCALE:-en}
+      - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-12}
+
+      # ============================================
+      # Logging
+      # ============================================
+      - LOG_CHANNEL=${LOG_CHANNEL:-stack}
+      - LOG_STACK=${LOG_STACK:-single}
+      - LOG_LEVEL=${LOG_LEVEL:-warning}
+
+      # ============================================
+      # Database (PostgreSQL)
+      # ============================================
+      - DB_CONNECTION=pgsql
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-laravel}
+      - DB_USERNAME=${DB_USERNAME:-laravel_user}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+
+      # ============================================
+      # Redis
+      # ============================================
+      - REDIS_CLIENT=phpredis
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
+      - REDIS_PORT=6379
+
+      # ============================================
+      # Cache, Session, Queue
+      # ============================================
+      - CACHE_STORE=redis
+      - SESSION_DRIVER=redis
+      - SESSION_LIFETIME=${SESSION_LIFETIME:-120}
+      - SESSION_ENCRYPT=false
+      - SESSION_PATH=/
+      - SESSION_DOMAIN=${SESSION_DOMAIN:-}
+      - QUEUE_CONNECTION=redis
+      - QUEUE_FAILED_DRIVER=database-uuids
+      - BROADCAST_CONNECTION=redis
+
+      # ============================================
+      # Migrations
+      # true  = run migrations only
+      # seed  = run migrations + seeders
+      # false = skip (default, safe for production)
+      # ============================================
+      - RUN_MIGRATIONS=${RUN_MIGRATIONS:-false}
+
+      # ============================================
+      # AWS S3 / MinIO (File Storage)
+      # ============================================
+      - FILESYSTEM_DISK=s3
+      - FILAMENT_FILESYSTEM_DISK=s3
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      - AWS_BUCKET=${MINIO_BUCKET:-laravel}
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ENDPOINT=${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
+      - AWS_URL=${MINIO_URL:?MINIO_URL is required}
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+
+      # ============================================
+      # Mail
+      # ============================================
+      - MAIL_MAILER=${MAIL_MAILER:-log}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-noreply@example.com}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-${APP_NAME:-Laravel}}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+    volumes:
+      - ${DATA_PATH:-./data}/${PROJECT_NAME:-laravel}/website-logs:/var/log
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - backend-network
+      - npm-network
+
+  # PostgreSQL Database
+  database:
+    image: postgres:16
+    container_name: ${PROJECT_NAME:-laravel}-db
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-laravel}
+      POSTGRES_USER: ${DB_USERNAME:-laravel_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - backend_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - backend-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ${PROJECT_NAME:-laravel}-redis
+    volumes:
+      - backend_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - backend-network
+
+  # MinIO Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: ${PROJECT_NAME:-laravel}-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    volumes:
+      - backend_minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - backend-network
+      - npm-network
+
+volumes:
+  backend_minio_data:
+  backend_postgres_data:
+  backend_redis_data:
+
+networks:
+  backend-network:
+    driver: bridge
+  npm-network:
+    external: true

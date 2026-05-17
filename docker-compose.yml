@@ -1,0 +1,62 @@
+services:
+ 
+  # MariaDB Database
+  database:
+    image: postgres:16
+    container_name: laravel-api-db
+    environment:
+      POSTGRES_DB: laravel_api
+      POSTGRES_USER: laravel_api_user
+      POSTGRES_PASSWORD: laravel_api_secret
+    ports:
+      - "6811:5432"
+    volumes:
+      - laravel_api_postgres_data:/var/lib/postgresql/data
+    networks:
+      - laravel-api-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: laravel-api-redis
+    ports:
+      - "6812:6379"
+    volumes:
+      - laravel_api_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - laravel-api-network
+
+  # MinIO Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: laravel-api-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: fahim_admin
+      MINIO_ROOT_PASSWORD: fahim_secret_2024
+    ports:
+      - "6813:9000"   # S3 API
+      - "6814:9001"   # Web console
+    volumes:
+      - laravel_api_minio_data:/data
+    networks:
+      - laravel-api-network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  laravel_api_minio_data:
+  laravel_api_postgres_data:
+  laravel_api_redis_data:
+
+networks:
+  laravel-api-network:
+    driver: bridge
