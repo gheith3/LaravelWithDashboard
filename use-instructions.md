@@ -12,10 +12,37 @@ A production-ready Laravel 13 starter template combining a Filament 5 admin dash
 | Dashboard + API | Filament admin + REST API (JWT) |
 | Dashboard + Website + API | All three layers |
 
-To remove a layer you don't need:
-- **Remove Website** — delete `app/Livewire/`, `resources/views/livewire/`, `resources/views/layouts/`, `routes/web.php` routes, and the `post-card` anonymous component.
-- **Remove API** — delete `app/Http/Controllers/Api/`, `app/Http/Requests/Api/`, `app/Http/Resources/Api/`, `app/Http/Middleware/ForceJsonResponse.php`, `app/Services/Auth*`, `app/Models/RefreshToken.php`, `routes/api.php`, and the `tests/Feature/Api/` folder.
-- **Remove Website + API** — remove both above; keep only Filament.
+To remove a layer you don't need, run the provided Artisan command:
+
+```bash
+# Remove Website layer
+php artisan template:remove --layer=website
+
+# Remove API layer
+php artisan template:remove --layer=api
+
+# Remove both Website and API layers (keep only Filament)
+php artisan template:remove --layer=website-api
+```
+
+You can also filter by example scope when removing a layer:
+
+```bash
+# Remove only Post-related files from the API layer
+php artisan template:remove --layer=api --scope=posts
+
+# Remove only Post-related files from the Website layer
+php artisan template:remove --layer=website --scope=posts
+```
+
+Or remove an example scope entirely (all layers + shared files):
+
+```bash
+# Remove the Posts example domain completely
+php artisan template:remove --scope=posts
+
+# Available scopes: posts, comments, tags
+```
 
 > **The Post, Comment, and Tag models/resources are working examples** that demonstrate the full convention: migration → model → service → Filament resource → API controller → Pest tests. Delete them when starting a real project.
 
