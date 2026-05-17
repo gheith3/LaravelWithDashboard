@@ -212,6 +212,124 @@ rm -rf tests/Feature/Api
 
 ---
 
+## Adding a Livewire Page or Component
+
+The public website layer uses **Livewire 3** full-page components. Pages are wired via `routes/web.php` and rendered through `resources/views/layouts/app.blade.php`.
+
+### Page convention
+
+| Class | `app/Livewire/Website/{PageName}.php` |
+| View | `resources/views/livewire/website/{page-name}.blade.php` |
+| Route | `routes/web.php` |
+
+**1. Create the page class**
+
+```php
+<?php
+
+namespace App\Livewire\Website;
+
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+
+#[Layout('layouts.app')]
+#[Title('About Us')]
+class AboutPage extends Component
+{
+    public function render()
+    {
+        return view('livewire.website.about-page');
+    }
+}
+```
+
+**2. Create the Blade view**
+
+```blade
+{{-- resources/views/livewire/website/about-page.blade.php --}}
+<div>
+    <h1 class="text-3xl font-bold">About Us</h1>
+    <p class="mt-4 text-gray-600">Your content here.</p>
+</div>
+```
+
+**3. Register the route**
+
+```php
+<?php
+
+use App\Livewire\Website\AboutPage;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/about', AboutPage::class)->name('about');
+```
+
+### Shared component convention
+
+Reusable UI pieces (Navbar, Footer, etc.) live in the `Components` sub-namespace.
+
+| Class | `app/Livewire/Website/Components/{Name}.php` |
+| View | `resources/views/livewire/website/components/{name}.blade.php` |
+
+**Usage inside a page view:**
+
+```blade
+<livewire:website.components.navbar />
+```
+
+**Example component class:**
+
+```php
+<?php
+
+namespace App\Livewire\Website\Components;
+
+use Livewire\Component;
+
+class NewsletterForm extends Component
+{
+    public string $email = '';
+
+    public function subscribe(): void
+    {
+        $this->validate(['email' => 'required|email']);
+        // …
+        $this->reset('email');
+    }
+
+    public function render()
+    {
+        return view('livewire.website.components.newsletter-form');
+    }
+}
+```
+
+### Layout
+
+All pages use `resources/views/layouts/app.blade.php` which includes Vite assets and Livewire directives:
+
+```blade
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ $title ?? config('app.name') }}</title>
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
+    </head>
+    <body>
+        {{ $slot }}
+        @livewireScripts
+    </body>
+</html>
+```
+
+Override per-page via `#[Layout('layouts.custom')]` or omit entirely for a blank page.
+
+---
+
 ## Docker
 
 Two compose files are provided:
