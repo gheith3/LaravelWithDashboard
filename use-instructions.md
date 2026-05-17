@@ -41,7 +41,10 @@ Or remove an example scope entirely (all layers + shared files):
 # Remove the Posts example domain completely
 php artisan template:remove --scope=posts
 
-# Available scopes: posts, comments, tags
+# Remove all example domains at once (posts, comments, tags)
+php artisan template:remove --scope=all
+
+# Available scopes: posts, comments, tags, all
 ```
 
 > **The Post, Comment, and Tag models/resources are working examples** that demonstrate the full convention: migration → model → service → Filament resource → API controller → Pest tests. Delete them when starting a real project.
