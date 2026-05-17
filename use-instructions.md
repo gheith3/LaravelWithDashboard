@@ -1,6 +1,6 @@
 # Laravel 13 + Filament 5 Project Template
 
-A production-ready Laravel 13 starter template combining a Filament 5 admin dashboard, a Livewire 3 public website, and a JWT-authenticated REST API. Pick the layers you need — the architecture supports all three together or any subset.
+A production-ready Laravel 13 starter template combining a Filament 5 admin dashboard, a Livewire 4 public website, and a JWT-authenticated REST API. Pick the layers you need — the architecture supports all three together or any subset.
 
 ---
 
@@ -57,7 +57,7 @@ php artisan template:remove --scope=all
 |---|---|
 | Framework | Laravel 13, PHP 8.4 |
 | Admin dashboard | Filament 5 |
-| Public website | Livewire 3, Tailwind CSS v4 |
+| Public website | Livewire 4, Tailwind CSS v4 |
 | REST API auth | JWT (`php-open-source-saver/jwt-auth`) |
 | Database | PostgreSQL 16 (SQLite for tests) |
 | File storage | AWS S3 / MinIO |
@@ -217,7 +217,7 @@ rm -rf tests/Feature/Api
 
 ## Adding a Livewire Page or Component
 
-The public website layer uses **Livewire 3** full-page components. Pages are wired via `routes/web.php` and rendered through `resources/views/layouts/app.blade.php`.
+The public website layer uses **Livewire 4** full-page components. Pages are wired via `routes/web.php` and rendered through `resources/views/layouts/app.blade.php`.
 
 ### Page convention
 
