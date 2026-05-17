@@ -48,7 +48,7 @@ class TemplateRemove extends Command
             $this->line('  php artisan template:remove --scope=posts');
             $this->line('  php artisan template:remove --scope=comments');
             $this->line('  php artisan template:remove --scope=tags');
-            $this->line('  php artisan template:remove --scope=posts|comments|tags');
+            $this->line('  php artisan template:remove --scope=all');
 
             return self::FAILURE;
         }
@@ -58,29 +58,33 @@ class TemplateRemove extends Command
             return self::FAILURE;
         }
 
-        if (!empty($scope) && !in_array($scope, ['posts', 'comments', 'tags'])) {
+        if (!empty($scope) && !in_array($scope, ['posts', 'comments', 'tags', 'all'])) {
             $this->error("Invalid scope: {$scope}. Allowed values: posts, comments, tags");
             return self::FAILURE;
         }
 
+        $scopes = $scope === 'all' ? ['posts', 'comments', 'tags'] : [$scope];
+        $scopeLabel = $scope === 'all' ? 'all scopes' : "scope: {$scope}";
         $layers = $this->resolveLayers($layer);
         $target = empty($scope)
             ? implode(' + ', $layers) . ' layer'
-            : (empty($layers) ? 'scope: ' . $scope : implode(' + ', $layers) . ' layer with scope: ' . $scope);
+            : (empty($layers) ? $scopeLabel : implode(' + ', $layers) . ' layer with ' . $scopeLabel);
 
         if (!$this->confirm("This will remove files for: {$target}. Continue?")) {
             $this->warn('Aborted.');
             return self::FAILURE;
         }
 
-        if (!empty($scope) && empty($layer)) {
-            // Scope-only: remove from both layers + shared files
-            $this->removeLayer('website', $scope);
-            $this->removeLayer('api', $scope);
-            $this->removeScopeShared($scope);
-        } else {
-            foreach ($layers as $l) {
-                $this->removeLayer($l, $scope);
+        foreach ($scopes as $s) {
+            if (!empty($s) && empty($layer)) {
+                // Scope-only: remove from both layers + shared files
+                $this->removeLayer('website', $s);
+                $this->removeLayer('api', $s);
+                $this->removeScopeShared($s);
+            } else {
+                foreach ($layers as $l) {
+                    $this->removeLayer($l, $s);
+                }
             }
         }
 
