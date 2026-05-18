@@ -70,10 +70,7 @@ class TemplateRemove extends Command
             ? implode(' + ', $layers) . ' layer'
             : (empty($layers) ? $scopeLabel : implode(' + ', $layers) . ' layer with ' . $scopeLabel);
 
-        if (!$this->confirm("This will remove files for: {$target}. Continue?")) {
-            $this->warn('Aborted.');
-            return self::FAILURE;
-        }
+        $this->info("Removing files for: {$target}");
 
         foreach ($scopes as $s) {
             if (!empty($s) && empty($layer)) {
